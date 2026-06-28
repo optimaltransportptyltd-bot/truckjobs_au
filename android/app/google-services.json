@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "453391748408",
+    "project_id": "truckjobsappau",
+    "storage_bucket": "truckjobsappau.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453391748408:android:bdbdd7b1cee41a943f45cd",
+        "android_client_info": {
+          "package_name": "com.example.truckjobs_au"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD73JzZ9d_9_VwI7HbeKCsdRvdCkSjIgN4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
