@@ -213,6 +213,21 @@ class _JobsPageState extends State<JobsPage> {
     }
   }
 
+  Future<void> reportJob(Job job, BuildContext context) async {
+    await FirebaseFirestore.instance.collection('reports').add({
+      'jobId': job.id,
+      'jobTitle': job.title,
+      'company': job.company,
+      'contact': job.contact,
+      'reason': 'Reported by user',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job reported. Thank you.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -502,38 +517,49 @@ class _JobsPageState extends State<JobsPage> {
 
               const SizedBox(height: 20),
 
-              ElevatedButton.icon(
-                onPressed: () {
-                  callEmployer(job.contact);
-                },
-                icon: const Icon(Icons.phone),
-                label: const Text('Call Employer'),
-              ),
+ElevatedButton.icon(
+  onPressed: () {
+    callEmployer(job.contact);
+  },
+  icon: const Icon(Icons.phone),
+  label: const Text('Call Employer'),
+),
 
-              const SizedBox(height: 10),
+const SizedBox(height: 10),
 
-              ElevatedButton.icon(
-                onPressed: () {
-                  whatsappEmployer(job);
-                },
-                icon: const Icon(Icons.chat),
-                label: const Text('Apply on WhatsApp'),
-              ),
+ElevatedButton.icon(
+  onPressed: () {
+    whatsappEmployer(job);
+  },
+  icon: const Icon(Icons.chat),
+  label: const Text('Apply on WhatsApp'),
+),
 
-              const SizedBox(height: 10),
+const SizedBox(height: 10),
 
-              OutlinedButton.icon(
-                onPressed: () {
-                  widget.onSaveJob(job);
-                  Navigator.pop(context);
+OutlinedButton.icon(
+  onPressed: () {
+    widget.onSaveJob(job);
+    Navigator.pop(context);
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Job saved')),
-                  );
-                },
-                icon: const Icon(Icons.bookmark),
-                label: const Text('Save Job'),
-              ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job saved')),
+    );
+  },
+  icon: const Icon(Icons.bookmark),
+  label: const Text('Save Job'),
+),
+
+const SizedBox(height: 10),
+
+OutlinedButton.icon(
+  onPressed: () {
+    reportJob(job, context);
+    Navigator.pop(context);
+  },
+  icon: const Icon(Icons.report),
+  label: const Text('Report Job'),
+),
             ],
           ),
         );
@@ -980,110 +1006,212 @@ class AdminPage extends StatelessWidget {
     );
   }
 
+  Future<void> deleteReport(String reportId, BuildContext context) async {
+    await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Report removed')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-    .collection('jobs')
-    .where('status', isEqualTo: 'pending')
-    .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text('Something went wrong loading pending jobs'),
-          );
-        }
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text(
+          'Admin Dashboard',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        const SizedBox(height: 20),
 
-        final pendingJobs = snapshot.data!.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return Job.fromFirestore(doc.id, data);
-        }).toList();
+        const Text(
+          'Pending Jobs',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
 
-        if (pendingJobs.isEmpty) {
-          return const Center(
-            child: Text(
-              'No pending jobs',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-          );
-        }
+        const SizedBox(height: 10),
 
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const Text(
-              'Admin Approval',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text('${pendingJobs.length} pending jobs'),
-            const SizedBox(height: 16),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('jobs')
+              .where('status', isEqualTo: 'pending')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Text('Error loading pending jobs');
+            }
 
-            for (final job in pendingJobs)
-              Card(
-                margin: const EdgeInsets.only(bottom: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final pendingJobs = snapshot.data!.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              return Job.fromFirestore(doc.id, data);
+            }).toList();
+
+            if (pendingJobs.isEmpty) {
+              return const Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        job.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(job.company),
-                      const SizedBox(height: 8),
-                      Text(job.location),
-                      const SizedBox(height: 8),
-                      Text('Licence: ${job.licence}'),
-                      Text('Pay: ${job.pay}'),
-                      Text('Type: ${job.type}'),
-                      Text('Contact: ${job.contact}'),
-                      const SizedBox(height: 10),
-                      Text(job.description),
-                      const SizedBox(height: 14),
+                  padding: EdgeInsets.all(16),
+                  child: Text('No pending jobs'),
+                ),
+              );
+            }
 
-                      Row(
+            return Column(
+              children: [
+                for (final job in pendingJobs)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                approveJob(job.id, context);
-                              },
-                              icon: const Icon(Icons.check),
-                              label: const Text('Approve'),
+                          Text(
+                            job.title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                rejectJob(job.id, context);
-                              },
-                              icon: const Icon(Icons.close),
-                              label: const Text('Reject'),
-                            ),
+                          const SizedBox(height: 6),
+                          Text(job.company),
+                          const SizedBox(height: 8),
+                          Text(job.location),
+                          const SizedBox(height: 8),
+                          Text('Licence: ${job.licence}'),
+                          Text('Pay: ${job.pay}'),
+                          Text('Type: ${job.type}'),
+                          Text('Contact: ${job.contact}'),
+                          const SizedBox(height: 10),
+                          Text(job.description),
+                          const SizedBox(height: 14),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    approveJob(job.id, context);
+                                  },
+                                  icon: const Icon(Icons.check),
+                                  label: const Text('Approve'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    rejectJob(job.id, context);
+                                  },
+                                  icon: const Icon(Icons.close),
+                                  label: const Text('Reject'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
+              ],
+            );
+          },
+        ),
+
+        const SizedBox(height: 30),
+
+        const Text(
+          'Reported Jobs',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+
+        const SizedBox(height: 10),
+
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('reports')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Text('Error loading reports');
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final reports = snapshot.data!.docs;
+
+            if (reports.isEmpty) {
+              return const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('No reported jobs'),
                 ),
-              ),
-          ],
-        );
-      },
+              );
+            }
+
+            return Column(
+              children: [
+                for (final report in reports)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Builder(
+                        builder: (context) {
+                          final data = report.data() as Map<String, dynamic>;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Reported Job',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text('Job: ${data['jobTitle'] ?? 'Unknown'}'),
+                              Text('Company: ${data['company'] ?? 'Unknown'}'),
+                              Text('Contact: ${data['contact'] ?? 'Unknown'}'),
+                              Text('Reason: ${data['reason'] ?? 'Reported by user'}'),
+                              const SizedBox(height: 12),
+
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    deleteReport(report.id, context);
+                                  },
+                                  icon: const Icon(Icons.delete),
+                                  label: const Text('Remove Report'),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 }
