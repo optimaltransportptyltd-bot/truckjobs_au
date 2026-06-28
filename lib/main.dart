@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -584,51 +585,67 @@ class _PostJobPageState extends State<PostJobPage> {
     'Owner Driver',
   ];
 
-  void submitJob() {
-    if (titleController.text.isEmpty ||
-        companyController.text.isEmpty ||
-        cityController.text.isEmpty ||
-        contactController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill required fields')),
-      );
-      return;
-    }
-
-    final newJob = Job(
-      title: titleController.text,
-      company: companyController.text,
-      location: '${cityController.text}, $selectedState',
-      licence: selectedLicence,
-      pay: payController.text.isEmpty ? 'Pay not listed' : payController.text,
-      type: selectedJobType,
-      contact: contactController.text,
-      description: descriptionController.text.isEmpty
-    ? 'No description added.'
-    : descriptionController.text,
-isUrgent: isUrgent,
-    );
-
-    widget.onJobSubmit(newJob);
-
-    titleController.clear();
-    companyController.clear();
-    cityController.clear();
-    payController.clear();
-    contactController.clear();
-    descriptionController.clear();
-
-    setState(() {
-      selectedLicence = 'MR';
-      selectedState = 'VIC';
-      selectedJobType = 'Full Time';
-      isUrgent = false;
-    });
-
+  Future<void> submitJob() async {
+  if (titleController.text.isEmpty ||
+      companyController.text.isEmpty ||
+      cityController.text.isEmpty ||
+      contactController.text.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Job posted successfully')),
+      const SnackBar(content: Text('Please fill required fields')),
     );
+    return;
   }
+
+  final newJob = Job(
+    title: titleController.text.trim(),
+    company: companyController.text.trim(),
+    location: '${cityController.text.trim()}, $selectedState',
+    licence: selectedLicence,
+    pay: payController.text.trim().isEmpty
+        ? 'Pay not listed'
+        : payController.text.trim(),
+    type: selectedJobType,
+    contact: contactController.text.trim(),
+    description: descriptionController.text.trim().isEmpty
+        ? 'No description added.'
+        : descriptionController.text.trim(),
+    isUrgent: isUrgent,
+  );
+
+  await FirebaseFirestore.instance.collection('jobs').add({
+    'title': newJob.title,
+    'company': newJob.company,
+    'location': newJob.location,
+    'licence': newJob.licence,
+    'pay': newJob.pay,
+    'type': newJob.type,
+    'contact': newJob.contact,
+    'description': newJob.description,
+    'isUrgent': newJob.isUrgent,
+    'status': 'pending',
+    'createdAt': FieldValue.serverTimestamp(),
+  });
+
+  widget.onJobSubmit(newJob);
+
+  titleController.clear();
+  companyController.clear();
+  cityController.clear();
+  payController.clear();
+  contactController.clear();
+  descriptionController.clear();
+
+  setState(() {
+    selectedLicence = 'MR';
+    selectedState = 'VIC';
+    selectedJobType = 'Full Time';
+    isUrgent = false;
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Job saved to Firebase')),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
