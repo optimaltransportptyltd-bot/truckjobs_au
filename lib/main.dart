@@ -58,6 +58,20 @@ class Job {
     required this.description,
     required this.isUrgent,
   });
+
+   factory Job.fromFirestore(Map<String, dynamic> data) {
+    return Job(
+      title: data['title'] ?? '',
+      company: data['company'] ?? '',
+      location: data['location'] ?? '',
+      licence: data['licence'] ?? '',
+      pay: data['pay'] ?? 'Pay not listed',
+      type: data['type'] ?? '',
+      contact: data['contact'] ?? '',
+      description: data['description'] ?? 'No description added.',
+      isUrgent: data['isUrgent'] ?? false,
+    );
+  }
 }
 
 class MainScreen extends StatefulWidget {
@@ -227,91 +241,116 @@ class _JobsPageState extends State<JobsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredJobs = widget.jobs.where((job) {
-      final searchLower = searchText.toLowerCase();
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+    .collection('jobs')
+    .orderBy('createdAt', descending: true)
+    .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Something went wrong loading jobs'),
+          );
+        }
 
-      final matchesSearch = job.title.toLowerCase().contains(searchLower) ||
-          job.company.toLowerCase().contains(searchLower) ||
-          job.location.toLowerCase().contains(searchLower) ||
-          job.licence.toLowerCase().contains(searchLower);
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-      final matchesLicence =
-          selectedLicence == 'All' || job.licence.contains(selectedLicence);
+        final firebaseJobs = snapshot.data!.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return Job.fromFirestore(data);
+        }).toList();
 
-      return matchesSearch && matchesLicence;
-    }).toList();
+        final filteredJobs = firebaseJobs.where((job) {
+          final searchLower = searchText.toLowerCase();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'Find trucking jobs across Australia',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
+          final matchesSearch = job.title.toLowerCase().contains(searchLower) ||
+              job.company.toLowerCase().contains(searchLower) ||
+              job.location.toLowerCase().contains(searchLower) ||
+              job.licence.toLowerCase().contains(searchLower);
 
-        const SizedBox(height: 12),
+          final matchesLicence =
+              selectedLicence == 'All' || job.licence.contains(selectedLicence);
 
-        TextField(
-          onChanged: (value) {
-            setState(() {
-              searchText = value;
-            });
-          },
-          decoration: InputDecoration(
-            hintText: 'Search by city, licence or job title',
-            prefixIcon: const Icon(Icons.search),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
+          return matchesSearch && matchesLicence;
+        }).toList();
 
-        const SizedBox(height: 16),
-
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              filterChip('All'),
-              filterChip('MR'),
-              filterChip('HR'),
-              filterChip('HC'),
-              filterChip('MC'),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return ListView(
+          padding: const EdgeInsets.all(16),
           children: [
             const Text(
-              'Latest Jobs',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Find trucking jobs across Australia',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            Text('${filteredJobs.length} found'),
-          ],
-        ),
 
-        const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
-        if (filteredJobs.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 40),
-            child: Center(
-              child: Text(
-                'No jobs found',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+            TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchText = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Search by city, licence or job title',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
-          ),
 
-        for (final job in filteredJobs) jobCard(context, job),
-      ],
+            const SizedBox(height: 16),
+
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  filterChip('All'),
+                  filterChip('MR'),
+                  filterChip('HR'),
+                  filterChip('HC'),
+                  filterChip('MC'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Latest Jobs',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Text('${filteredJobs.length} found'),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            if (filteredJobs.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Center(
+                  child: Text(
+                    'No jobs found',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ),
+              ),
+
+            for (final job in filteredJobs) jobCard(context, job),
+          ],
+        );
+      },
     );
   }
 
@@ -542,7 +581,6 @@ class _JobsPageState extends State<JobsPage> {
     );
   }
 }
-
 class PostJobPage extends StatefulWidget {
   final Function(Job) onJobSubmit;
 
