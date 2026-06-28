@@ -63,21 +63,21 @@ class Job {
     required this.isUrgent,
   });
 
-   factory Job.fromFirestore(String id, Map<String, dynamic> data) {
-  return Job(
-    id: id,
-    title: data['title'] ?? '',
-    company: data['company'] ?? '',
-    location: data['location'] ?? '',
-    licence: data['licence'] ?? '',
-    pay: data['pay'] ?? 'Pay not listed',
-    type: data['type'] ?? '',
-    contact: data['contact'] ?? '',
-    description: data['description'] ?? 'No description added.',
-    isUrgent: data['isUrgent'] ?? false,
-    status: data['status'] ?? 'pending',
-  );
-}
+  factory Job.fromFirestore(String id, Map<String, dynamic> data) {
+    return Job(
+      id: id,
+      title: data['title'] ?? '',
+      company: data['company'] ?? '',
+      location: data['location'] ?? '',
+      licence: data['licence'] ?? '',
+      pay: data['pay'] ?? 'Pay not listed',
+      type: data['type'] ?? '',
+      contact: data['contact'] ?? '',
+      description: data['description'] ?? 'No description added.',
+      isUrgent: data['isUrgent'] ?? false,
+      status: data['status'] ?? 'pending',
+    );
+  }
 }
 
 class MainScreen extends StatefulWidget {
@@ -162,6 +162,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+
 class JobsPage extends StatefulWidget {
   final List<Job> jobs;
   final Function(Job) onSaveJob;
@@ -231,10 +232,10 @@ class _JobsPageState extends State<JobsPage> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-     stream: FirebaseFirestore.instance
-    .collection('jobs')
-    .where('status', isEqualTo: 'approved')
-    .snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('jobs')
+          .where('status', isEqualTo: 'approved')
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Center(
@@ -274,9 +275,7 @@ class _JobsPageState extends State<JobsPage> {
               'Find trucking jobs across Australia',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 12),
-
             TextField(
               onChanged: (value) {
                 setState(() {
@@ -294,9 +293,7 @@ class _JobsPageState extends State<JobsPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -309,9 +306,7 @@ class _JobsPageState extends State<JobsPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -322,9 +317,7 @@ class _JobsPageState extends State<JobsPage> {
                 Text('${filteredJobs.length} found'),
               ],
             ),
-
             const SizedBox(height: 10),
-
             if (filteredJobs.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 40),
@@ -335,7 +328,6 @@ class _JobsPageState extends State<JobsPage> {
                   ),
                 ),
               ),
-
             for (final job in filteredJobs) jobCard(context, job),
           ],
         );
@@ -407,13 +399,9 @@ class _JobsPageState extends State<JobsPage> {
                   ),
               ],
             ),
-
             const SizedBox(height: 6),
-
             Text(job.company),
-
             const SizedBox(height: 10),
-
             Row(
               children: [
                 const Icon(Icons.location_on, size: 18),
@@ -421,9 +409,7 @@ class _JobsPageState extends State<JobsPage> {
                 Text(job.location),
               ],
             ),
-
             const SizedBox(height: 8),
-
             Wrap(
               spacing: 8,
               children: [
@@ -432,9 +418,7 @@ class _JobsPageState extends State<JobsPage> {
                 Chip(label: Text(job.type)),
               ],
             ),
-
             const SizedBox(height: 10),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -491,75 +475,59 @@ class _JobsPageState extends State<JobsPage> {
                     ),
                 ],
               ),
-
               const SizedBox(height: 10),
-
               Text(job.company),
-
               const SizedBox(height: 16),
-
               detailRow(Icons.location_on, 'Location', job.location),
               detailRow(Icons.badge, 'Licence', job.licence),
               detailRow(Icons.payments, 'Pay', job.pay),
               detailRow(Icons.work, 'Job Type', job.type),
               detailRow(Icons.phone, 'Contact', job.contact),
-
               const SizedBox(height: 16),
-
               const Text(
                 'Job Description',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 6),
-
               Text(job.description),
-
               const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () {
+                  callEmployer(job.contact);
+                },
+                icon: const Icon(Icons.phone),
+                label: const Text('Call Employer'),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  whatsappEmployer(job);
+                },
+                icon: const Icon(Icons.chat),
+                label: const Text('Apply on WhatsApp'),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () {
+                  widget.onSaveJob(job);
+                  Navigator.pop(context);
 
-ElevatedButton.icon(
-  onPressed: () {
-    callEmployer(job.contact);
-  },
-  icon: const Icon(Icons.phone),
-  label: const Text('Call Employer'),
-),
-
-const SizedBox(height: 10),
-
-ElevatedButton.icon(
-  onPressed: () {
-    whatsappEmployer(job);
-  },
-  icon: const Icon(Icons.chat),
-  label: const Text('Apply on WhatsApp'),
-),
-
-const SizedBox(height: 10),
-
-OutlinedButton.icon(
-  onPressed: () {
-    widget.onSaveJob(job);
-    Navigator.pop(context);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Job saved')),
-    );
-  },
-  icon: const Icon(Icons.bookmark),
-  label: const Text('Save Job'),
-),
-
-const SizedBox(height: 10),
-
-OutlinedButton.icon(
-  onPressed: () {
-    reportJob(job, context);
-    Navigator.pop(context);
-  },
-  icon: const Icon(Icons.report),
-  label: const Text('Report Job'),
-),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Job saved')),
+                  );
+                },
+                icon: const Icon(Icons.bookmark),
+                label: const Text('Save Job'),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () {
+                  reportJob(job, context);
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.report),
+                label: const Text('Report Job'),
+              ),
             ],
           ),
         );
@@ -581,6 +549,7 @@ OutlinedButton.icon(
     );
   }
 }
+
 class PostJobPage extends StatefulWidget {
   final Function(Job) onJobSubmit;
 
@@ -604,6 +573,7 @@ class _PostJobPageState extends State<PostJobPage> {
   bool isUrgent = false;
 
   final List<String> licences = ['MR', 'HR', 'HC', 'MC'];
+
   final List<String> states = [
     'VIC',
     'NSW',
@@ -624,66 +594,66 @@ class _PostJobPageState extends State<PostJobPage> {
   ];
 
   Future<void> submitJob() async {
-  if (titleController.text.isEmpty ||
-      companyController.text.isEmpty ||
-      cityController.text.isEmpty ||
-      contactController.text.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please fill required fields')),
+    if (titleController.text.isEmpty ||
+        companyController.text.isEmpty ||
+        cityController.text.isEmpty ||
+        contactController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill required fields')),
+      );
+      return;
+    }
+
+    final newJob = Job(
+      title: titleController.text.trim(),
+      company: companyController.text.trim(),
+      location: '${cityController.text.trim()}, $selectedState',
+      licence: selectedLicence,
+      pay: payController.text.trim().isEmpty
+          ? 'Pay not listed'
+          : payController.text.trim(),
+      type: selectedJobType,
+      contact: contactController.text.trim(),
+      description: descriptionController.text.trim().isEmpty
+          ? 'No description added.'
+          : descriptionController.text.trim(),
+      isUrgent: isUrgent,
     );
-    return;
+
+    await FirebaseFirestore.instance.collection('jobs').add({
+      'title': newJob.title,
+      'company': newJob.company,
+      'location': newJob.location,
+      'licence': newJob.licence,
+      'pay': newJob.pay,
+      'type': newJob.type,
+      'contact': newJob.contact,
+      'description': newJob.description,
+      'isUrgent': newJob.isUrgent,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    widget.onJobSubmit(newJob);
+
+    titleController.clear();
+    companyController.clear();
+    cityController.clear();
+    payController.clear();
+    contactController.clear();
+    descriptionController.clear();
+
+    setState(() {
+      selectedLicence = 'MR';
+      selectedState = 'VIC';
+      selectedJobType = 'Full Time';
+      isUrgent = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job saved to Firebase')),
+    );
   }
-
-  final newJob = Job(
-    title: titleController.text.trim(),
-    company: companyController.text.trim(),
-    location: '${cityController.text.trim()}, $selectedState',
-    licence: selectedLicence,
-    pay: payController.text.trim().isEmpty
-        ? 'Pay not listed'
-        : payController.text.trim(),
-    type: selectedJobType,
-    contact: contactController.text.trim(),
-    description: descriptionController.text.trim().isEmpty
-        ? 'No description added.'
-        : descriptionController.text.trim(),
-    isUrgent: isUrgent,
-  );
-
-  await FirebaseFirestore.instance.collection('jobs').add({
-    'title': newJob.title,
-    'company': newJob.company,
-    'location': newJob.location,
-    'licence': newJob.licence,
-    'pay': newJob.pay,
-    'type': newJob.type,
-    'contact': newJob.contact,
-    'description': newJob.description,
-    'isUrgent': newJob.isUrgent,
-    'status': 'pending',
-    'createdAt': FieldValue.serverTimestamp(),
-  });
-
-  widget.onJobSubmit(newJob);
-
-  titleController.clear();
-  companyController.clear();
-  cityController.clear();
-  payController.clear();
-  contactController.clear();
-  descriptionController.clear();
-
-  setState(() {
-    selectedLicence = 'MR';
-    selectedState = 'VIC';
-    selectedJobType = 'Full Time';
-    isUrgent = false;
-  });
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Job saved to Firebase')),
-  );
-}
 
   @override
   Widget build(BuildContext context) {
@@ -694,16 +664,12 @@ class _PostJobPageState extends State<PostJobPage> {
           'Post a Trucking Job',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 8),
-
         const Text(
-          'Add job details. Later we will connect this to Firebase and admin approval.',
+          'Add job details. Admin approval is required before it appears live.',
           style: TextStyle(color: Colors.grey),
         ),
-
         const SizedBox(height: 20),
-
         inputField('Job title *', Icons.work, titleController),
         inputField('Company name *', Icons.business, companyController),
         inputField(
@@ -711,7 +677,6 @@ class _PostJobPageState extends State<PostJobPage> {
           Icons.location_city,
           cityController,
         ),
-
         dropdownField(
           label: 'State',
           icon: Icons.map,
@@ -723,7 +688,6 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
-
         dropdownField(
           label: 'Licence needed',
           icon: Icons.badge,
@@ -735,13 +699,11 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
-
         inputField(
           'Pay rate e.g. \$45/hr or \$550/day',
           Icons.payments,
           payController,
         ),
-
         dropdownField(
           label: 'Job type',
           icon: Icons.schedule,
@@ -753,9 +715,7 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
-
         inputField('Contact phone number *', Icons.phone, contactController),
-
         SwitchListTile(
           title: const Text('Mark as urgent job'),
           subtitle: const Text('Urgent jobs will show a red badge'),
@@ -767,7 +727,6 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
-
         Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: TextField(
@@ -785,9 +744,7 @@ class _PostJobPageState extends State<PostJobPage> {
             ),
           ),
         ),
-
         const SizedBox(height: 10),
-
         ElevatedButton(
           onPressed: submitJob,
           child: const Padding(
@@ -883,9 +840,7 @@ class SavedJobsPage extends StatelessWidget {
           'Saved Jobs',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 12),
-
         for (final job in savedJobs)
           Card(
             margin: const EdgeInsets.only(bottom: 14),
@@ -907,6 +862,7 @@ class SavedJobsPage extends StatelessWidget {
     );
   }
 }
+
 class AdminPinPage extends StatefulWidget {
   const AdminPinPage({super.key});
 
@@ -953,7 +909,7 @@ class _AdminPinPageState extends State<AdminPinPage> {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Enter admin PIN to approve or reject jobs.',
+            'Enter admin PIN to approve, reject, or delete jobs.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
@@ -1006,11 +962,39 @@ class AdminPage extends StatelessWidget {
     );
   }
 
+  Future<void> deleteJob(String jobId, BuildContext context) async {
+    await FirebaseFirestore.instance.collection('jobs').doc(jobId).delete();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job deleted')),
+    );
+  }
+
   Future<void> deleteReport(String reportId, BuildContext context) async {
     await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Report removed')),
+    );
+  }
+
+  Future<void> deleteReportedJob(
+    String jobId,
+    String reportId,
+    BuildContext context,
+  ) async {
+    if (jobId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Job ID missing. Cannot delete job.')),
+      );
+      return;
+    }
+
+    await FirebaseFirestore.instance.collection('jobs').doc(jobId).delete();
+    await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Reported job deleted')),
     );
   }
 
@@ -1023,16 +1007,12 @@ class AdminPage extends StatelessWidget {
           'Admin Dashboard',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 20),
-
         const Text(
           'Pending Jobs',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 10),
-
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('jobs')
@@ -1093,7 +1073,6 @@ class AdminPage extends StatelessWidget {
                           const SizedBox(height: 10),
                           Text(job.description),
                           const SizedBox(height: 14),
-
                           Row(
                             children: [
                               Expanded(
@@ -1117,6 +1096,17 @@ class AdminPage extends StatelessWidget {
                               ),
                             ],
                           ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                deleteJob(job.id, context);
+                              },
+                              icon: const Icon(Icons.delete),
+                              label: const Text('Delete Job'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1125,20 +1115,14 @@ class AdminPage extends StatelessWidget {
             );
           },
         ),
-
         const SizedBox(height: 30),
-
         const Text(
           'Reported Jobs',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 10),
-
         StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('reports')
-              .snapshots(),
+          stream: FirebaseFirestore.instance.collection('reports').snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return const Text('Error loading reports');
@@ -1188,18 +1172,38 @@ class AdminPage extends StatelessWidget {
                               Text('Job: ${data['jobTitle'] ?? 'Unknown'}'),
                               Text('Company: ${data['company'] ?? 'Unknown'}'),
                               Text('Contact: ${data['contact'] ?? 'Unknown'}'),
-                              Text('Reason: ${data['reason'] ?? 'Reported by user'}'),
+                              Text(
+                                'Reason: ${data['reason'] ?? 'Reported by user'}',
+                              ),
                               const SizedBox(height: 12),
-
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    deleteReport(report.id, context);
-                                  },
-                                  icon: const Icon(Icons.delete),
-                                  label: const Text('Remove Report'),
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        final jobId =
+                                            (data['jobId'] ?? '').toString();
+                                        deleteReportedJob(
+                                          jobId,
+                                          report.id,
+                                          context,
+                                        );
+                                      },
+                                      icon: const Icon(Icons.delete_forever),
+                                      label: const Text('Delete Job'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {
+                                        deleteReport(report.id, context);
+                                      },
+                                      icon: const Icon(Icons.close),
+                                      label: const Text('Remove Report'),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           );
@@ -1215,6 +1219,7 @@ class AdminPage extends StatelessWidget {
     );
   }
 }
+
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -1227,18 +1232,14 @@ class ProfilePage extends StatelessWidget {
           radius: 45,
           child: Icon(Icons.person, size: 50),
         ),
-
         SizedBox(height: 16),
-
         Center(
           child: Text(
             'Driver / Employer Profile',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
         ),
-
         SizedBox(height: 20),
-
         Card(
           child: ListTile(
             leading: Icon(Icons.person),
@@ -1246,7 +1247,6 @@ class ProfilePage extends StatelessWidget {
             subtitle: Text('Add your name later'),
           ),
         ),
-
         Card(
           child: ListTile(
             leading: Icon(Icons.badge),
@@ -1254,7 +1254,6 @@ class ProfilePage extends StatelessWidget {
             subtitle: Text('MR / HR / HC / MC'),
           ),
         ),
-
         Card(
           child: ListTile(
             leading: Icon(Icons.location_on),
