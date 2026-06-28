@@ -48,6 +48,7 @@ class Job {
   final String contact;
   final String description;
   final bool isUrgent;
+  final DateTime? createdAt;
 
   const Job({
     this.id = '',
@@ -61,9 +62,17 @@ class Job {
     required this.contact,
     required this.description,
     required this.isUrgent,
+    this.createdAt,
   });
 
   factory Job.fromFirestore(String id, Map<String, dynamic> data) {
+    DateTime? createdAtDate;
+
+    final createdAtValue = data['createdAt'];
+    if (createdAtValue is Timestamp) {
+      createdAtDate = createdAtValue.toDate();
+    }
+
     return Job(
       id: id,
       title: data['title'] ?? '',
@@ -76,10 +85,33 @@ class Job {
       description: data['description'] ?? 'No description added.',
       isUrgent: data['isUrgent'] ?? false,
       status: data['status'] ?? 'pending',
+      createdAt: createdAtDate,
     );
   }
 }
 
+String formatPostedDate(DateTime? date) {
+  if (date == null) {
+    return 'Posted recently';
+  }
+
+  final months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  return 'Posted: ${date.day} ${months[date.month - 1]} ${date.year}';
+}
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -253,6 +285,11 @@ class _JobsPageState extends State<JobsPage> {
           final data = doc.data() as Map<String, dynamic>;
           return Job.fromFirestore(doc.id, data);
         }).toList();
+        firebaseJobs.sort((a, b) {
+  final aDate = a.createdAt ?? DateTime(2000);
+  final bDate = b.createdAt ?? DateTime(2000);
+  return bDate.compareTo(aDate);
+});
 
         final filteredJobs = firebaseJobs.where((job) {
           final searchLower = searchText.toLowerCase();
@@ -401,6 +438,16 @@ class _JobsPageState extends State<JobsPage> {
             ),
             const SizedBox(height: 6),
             Text(job.company),
+
+            const SizedBox(height: 4),
+
+Text(
+  formatPostedDate(job.createdAt),
+  style: const TextStyle(
+    color: Colors.grey,
+    fontSize: 13,
+  ),
+),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -1031,7 +1078,11 @@ class AdminPage extends StatelessWidget {
               final data = doc.data() as Map<String, dynamic>;
               return Job.fromFirestore(doc.id, data);
             }).toList();
-
+pendingJobs.sort((a, b) {
+  final aDate = a.createdAt ?? DateTime(2000);
+  final bDate = b.createdAt ?? DateTime(2000);
+  return bDate.compareTo(aDate);
+});
             if (pendingJobs.isEmpty) {
               return const Card(
                 child: Padding(
