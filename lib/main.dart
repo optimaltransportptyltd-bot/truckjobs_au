@@ -37,6 +37,8 @@ class TruckJobsApp extends StatelessWidget {
 }
 
 class Job {
+  final String id;
+  final String status;
   final String title;
   final String company;
   final String location;
@@ -48,6 +50,8 @@ class Job {
   final bool isUrgent;
 
   const Job({
+    this.id = '',
+    this.status = 'pending',
     required this.title,
     required this.company,
     required this.location,
@@ -59,19 +63,21 @@ class Job {
     required this.isUrgent,
   });
 
-   factory Job.fromFirestore(Map<String, dynamic> data) {
-    return Job(
-      title: data['title'] ?? '',
-      company: data['company'] ?? '',
-      location: data['location'] ?? '',
-      licence: data['licence'] ?? '',
-      pay: data['pay'] ?? 'Pay not listed',
-      type: data['type'] ?? '',
-      contact: data['contact'] ?? '',
-      description: data['description'] ?? 'No description added.',
-      isUrgent: data['isUrgent'] ?? false,
-    );
-  }
+   factory Job.fromFirestore(String id, Map<String, dynamic> data) {
+  return Job(
+    id: id,
+    title: data['title'] ?? '',
+    company: data['company'] ?? '',
+    location: data['location'] ?? '',
+    licence: data['licence'] ?? '',
+    pay: data['pay'] ?? 'Pay not listed',
+    type: data['type'] ?? '',
+    contact: data['contact'] ?? '',
+    description: data['description'] ?? 'No description added.',
+    isUrgent: data['isUrgent'] ?? false,
+    status: data['status'] ?? 'pending',
+  );
+}
 }
 
 class MainScreen extends StatefulWidget {
@@ -84,47 +90,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
 
-  final List<Job> jobs = [
-    const Job(
-      title: 'MC Driver Required',
-      company: 'Melbourne Freight Co',
-      location: 'Melbourne, VIC',
-      licence: 'MC',
-      pay: '\$45/hr',
-      type: 'Full Time',
-      contact: '0400 000 111',
-      description: 'MC driver needed for metro and regional freight work.',
-      isUrgent: true,
-    ),
-    const Job(
-      title: 'HR Driver - Local Runs',
-      company: 'Sydney Transport',
-      location: 'Sydney, NSW',
-      licence: 'HR',
-      pay: '\$38/hr',
-      type: 'Casual',
-      contact: '0400 000 222',
-      description: 'HR driver required for local delivery runs around Sydney.',
-      isUrgent: false,
-    ),
-    const Job(
-      title: 'Owner Driver Needed',
-      company: 'Brisbane Logistics',
-      location: 'Brisbane, QLD',
-      licence: 'MR/HR',
-      pay: '\$550/day',
-      type: 'ABN',
-      contact: '0400 000 333',
-      description: 'Owner driver required with own truck for daily runs.',
-      isUrgent: true,
-    ),
-  ];
-
+  final List<Job> jobs = [];
   final List<Job> savedJobs = [];
 
   void addJob(Job job) {
     setState(() {
-      jobs.insert(0, job);
       selectedIndex = 0;
     });
   }
@@ -156,6 +126,7 @@ class _MainScreenState extends State<MainScreen> {
       JobsPage(jobs: jobs, onSaveJob: saveJob),
       PostJobPage(onJobSubmit: addJob),
       SavedJobsPage(savedJobs: savedJobs, onRemoveJob: removeSavedJob),
+      const AdminPage(),
       const ProfilePage(),
     ];
 
@@ -181,13 +152,16 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Post Job',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Saved'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings),
+            label: 'Admin',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
 }
-
 class JobsPage extends StatefulWidget {
   final List<Job> jobs;
   final Function(Job) onSaveJob;
@@ -242,9 +216,9 @@ class _JobsPageState extends State<JobsPage> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+     stream: FirebaseFirestore.instance
     .collection('jobs')
-    .orderBy('createdAt', descending: true)
+    .where('status', isEqualTo: 'approved')
     .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -261,7 +235,7 @@ class _JobsPageState extends State<JobsPage> {
 
         final firebaseJobs = snapshot.data!.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return Job.fromFirestore(data);
+          return Job.fromFirestore(doc.id, data);
         }).toList();
 
         final filteredJobs = firebaseJobs.where((job) {
@@ -908,6 +882,136 @@ class SavedJobsPage extends StatelessWidget {
   }
 }
 
+class AdminPage extends StatelessWidget {
+  const AdminPage({super.key});
+
+  Future<void> approveJob(String jobId, BuildContext context) async {
+    await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
+      'status': 'approved',
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job approved')),
+    );
+  }
+
+  Future<void> rejectJob(String jobId, BuildContext context) async {
+    await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
+      'status': 'rejected',
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job rejected')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+    .collection('jobs')
+    .where('status', isEqualTo: 'pending')
+    .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Something went wrong loading pending jobs'),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final pendingJobs = snapshot.data!.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return Job.fromFirestore(doc.id, data);
+        }).toList();
+
+        if (pendingJobs.isEmpty) {
+          return const Center(
+            child: Text(
+              'No pending jobs',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Text(
+              'Admin Approval',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text('${pendingJobs.length} pending jobs'),
+            const SizedBox(height: 16),
+
+            for (final job in pendingJobs)
+              Card(
+                margin: const EdgeInsets.only(bottom: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        job.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(job.company),
+                      const SizedBox(height: 8),
+                      Text(job.location),
+                      const SizedBox(height: 8),
+                      Text('Licence: ${job.licence}'),
+                      Text('Pay: ${job.pay}'),
+                      Text('Type: ${job.type}'),
+                      Text('Contact: ${job.contact}'),
+                      const SizedBox(height: 10),
+                      Text(job.description),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                approveJob(job.id, context);
+                              },
+                              icon: const Icon(Icons.check),
+                              label: const Text('Approve'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                rejectJob(job.id, context);
+                              },
+                              icon: const Icon(Icons.close),
+                              label: const Text('Reject'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
