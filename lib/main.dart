@@ -126,7 +126,7 @@ class _MainScreenState extends State<MainScreen> {
       JobsPage(jobs: jobs, onSaveJob: saveJob),
       PostJobPage(onJobSubmit: addJob),
       SavedJobsPage(savedJobs: savedJobs, onRemoveJob: removeSavedJob),
-      const AdminPage(),
+      const AdminPinPage(),
       const ProfilePage(),
     ];
 
@@ -878,6 +878,81 @@ class SavedJobsPage extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+class AdminPinPage extends StatefulWidget {
+  const AdminPinPage({super.key});
+
+  @override
+  State<AdminPinPage> createState() => _AdminPinPageState();
+}
+
+class _AdminPinPageState extends State<AdminPinPage> {
+  final pinController = TextEditingController();
+  bool isUnlocked = false;
+
+  void checkPin() {
+    if (pinController.text.trim() == '2329') {
+      setState(() {
+        isUnlocked = true;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wrong admin PIN')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isUnlocked) {
+      return const AdminPage();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.admin_panel_settings,
+            size: 70,
+            color: Colors.orange,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Admin Access',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Enter admin PIN to approve or reject jobs.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: pinController,
+            obscureText: true,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Admin PIN',
+              prefixIcon: const Icon(Icons.lock),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: checkPin,
+              child: const Text('Unlock Admin'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
