@@ -23,12 +23,81 @@ class TruckJobsApp extends StatelessWidget {
       title: 'TruckJobs AU',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.orange,
-        scaffoldBackgroundColor: const Color(0xFFF7F7F7),
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFF7A00),
+          primary: const Color(0xFFFF7A00),
+          secondary: const Color(0xFF111827),
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
+        fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.orange,
+          backgroundColor: Color(0xFF111827),
           foregroundColor: Colors.white,
           centerTitle: true,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black26,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF7A00),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF111827),
+            side: const BorderSide(color: Color(0xFF111827)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: Color(0xFFFF7A00),
+              width: 2,
+            ),
+          ),
         ),
       ),
       home: const MainScreen(),
@@ -112,6 +181,7 @@ String formatPostedDate(DateTime? date) {
 
   return 'Posted: ${date.day} ${months[date.month - 1]} ${date.year}';
 }
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -169,8 +239,10 @@ class _MainScreenState extends State<MainScreen> {
       body: pages[selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
-        selectedItemColor: Colors.orange,
+        selectedItemColor: const Color(0xFFFF7A00),
         unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        elevation: 12,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
@@ -261,6 +333,44 @@ class _JobsPageState extends State<JobsPage> {
     );
   }
 
+ Widget heroBanner() {
+  return Container(
+    height: 210,
+    margin: const EdgeInsets.only(bottom: 18),
+    decoration: BoxDecoration(
+      color: const Color(0xFF111827),
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black26,
+          blurRadius: 12,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: Image.asset(
+        'assets/images/truck_banner.png',
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Text(
+              'IMAGE NOT FOUND: assets/images/truck_banner.png',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -285,11 +395,12 @@ class _JobsPageState extends State<JobsPage> {
           final data = doc.data() as Map<String, dynamic>;
           return Job.fromFirestore(doc.id, data);
         }).toList();
+
         firebaseJobs.sort((a, b) {
-  final aDate = a.createdAt ?? DateTime(2000);
-  final bDate = b.createdAt ?? DateTime(2000);
-  return bDate.compareTo(aDate);
-});
+          final aDate = a.createdAt ?? DateTime(2000);
+          final bDate = b.createdAt ?? DateTime(2000);
+          return bDate.compareTo(aDate);
+        });
 
         final filteredJobs = firebaseJobs.where((job) {
           final searchLower = searchText.toLowerCase();
@@ -308,29 +419,22 @@ class _JobsPageState extends State<JobsPage> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              'Find trucking jobs across Australia',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
+            heroBanner(),
+
             TextField(
               onChanged: (value) {
                 setState(() {
                   searchText = value;
                 });
               },
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Search by city, licence or job title',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
+                prefixIcon: Icon(Icons.search),
               ),
             ),
+
             const SizedBox(height: 16),
+
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -343,7 +447,9 @@ class _JobsPageState extends State<JobsPage> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -354,7 +460,9 @@ class _JobsPageState extends State<JobsPage> {
                 Text('${filteredJobs.length} found'),
               ],
             ),
+
             const SizedBox(height: 10),
+
             if (filteredJobs.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 40),
@@ -365,6 +473,7 @@ class _JobsPageState extends State<JobsPage> {
                   ),
                 ),
               ),
+
             for (final job in filteredJobs) jobCard(context, job),
           ],
         );
@@ -380,10 +489,13 @@ class _JobsPageState extends State<JobsPage> {
       child: ChoiceChip(
         label: Text(text),
         selected: isSelected,
-        selectedColor: Colors.orange,
-        backgroundColor: Colors.orange.shade100,
+        selectedColor: const Color(0xFFFF7A00),
+        backgroundColor: Colors.white,
+        side: BorderSide(
+          color: isSelected ? const Color(0xFFFF7A00) : Colors.grey.shade300,
+        ),
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.black,
+          color: isSelected ? Colors.white : const Color(0xFF111827),
           fontWeight: FontWeight.bold,
         ),
         onSelected: (selected) {
@@ -398,7 +510,6 @@ class _JobsPageState extends State<JobsPage> {
   Widget jobCard(BuildContext context, Job job) {
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -406,6 +517,19 @@ class _JobsPageState extends State<JobsPage> {
           children: [
             Row(
               children: [
+                Container(
+                  height: 46,
+                  width: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF7A00).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.local_shipping,
+                    color: Color(0xFFFF7A00),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     job.title,
@@ -436,36 +560,63 @@ class _JobsPageState extends State<JobsPage> {
                   ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(job.company),
+
+            const SizedBox(height: 10),
+
+            Text(
+              job.company,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
 
             const SizedBox(height: 4),
 
-Text(
-  formatPostedDate(job.createdAt),
-  style: const TextStyle(
-    color: Colors.grey,
-    fontSize: 13,
-  ),
-),
+            Text(
+              formatPostedDate(job.createdAt),
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 13,
+              ),
+            ),
+
             const SizedBox(height: 10),
+
             Row(
               children: [
-                const Icon(Icons.location_on, size: 18),
+                const Icon(Icons.location_on, size: 18, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(job.location),
+                Expanded(child: Text(job.location)),
               ],
             ),
+
             const SizedBox(height: 8),
+
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               children: [
-                Chip(label: Text(job.licence)),
-                Chip(label: Text(job.pay)),
-                Chip(label: Text(job.type)),
+                Chip(
+                  avatar: const Icon(Icons.badge, size: 16),
+                  label: Text(job.licence),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.payments, size: 16),
+                  label: Text(job.pay),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.work, size: 16),
+                  label: Text(job.type),
+                ),
+                const Chip(
+                  avatar: Icon(Icons.verified, size: 16),
+                  label: Text('Approved'),
+                ),
               ],
             ),
-            const SizedBox(height: 10),
+
+            const SizedBox(height: 12),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -522,22 +673,39 @@ Text(
                     ),
                 ],
               ),
+
               const SizedBox(height: 10),
+
               Text(job.company),
+
+              const SizedBox(height: 8),
+
+              Text(
+                formatPostedDate(job.createdAt),
+                style: const TextStyle(color: Colors.grey),
+              ),
+
               const SizedBox(height: 16),
+
               detailRow(Icons.location_on, 'Location', job.location),
               detailRow(Icons.badge, 'Licence', job.licence),
               detailRow(Icons.payments, 'Pay', job.pay),
               detailRow(Icons.work, 'Job Type', job.type),
               detailRow(Icons.phone, 'Contact', job.contact),
+
               const SizedBox(height: 16),
+
               const Text(
                 'Job Description',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
+
               const SizedBox(height: 6),
+
               Text(job.description),
+
               const SizedBox(height: 20),
+
               ElevatedButton.icon(
                 onPressed: () {
                   callEmployer(job.contact);
@@ -545,7 +713,9 @@ Text(
                 icon: const Icon(Icons.phone),
                 label: const Text('Call Employer'),
               ),
+
               const SizedBox(height: 10),
+
               ElevatedButton.icon(
                 onPressed: () {
                   whatsappEmployer(job);
@@ -553,7 +723,9 @@ Text(
                 icon: const Icon(Icons.chat),
                 label: const Text('Apply on WhatsApp'),
               ),
+
               const SizedBox(height: 10),
+
               OutlinedButton.icon(
                 onPressed: () {
                   widget.onSaveJob(job);
@@ -566,7 +738,9 @@ Text(
                 icon: const Icon(Icons.bookmark),
                 label: const Text('Save Job'),
               ),
+
               const SizedBox(height: 10),
+
               OutlinedButton.icon(
                 onPressed: () {
                   reportJob(job, context);
@@ -587,7 +761,7 @@ Text(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, color: Colors.orange),
+          Icon(icon, color: const Color(0xFFFF7A00)),
           const SizedBox(width: 10),
           Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
           Expanded(child: Text(value)),
@@ -711,12 +885,16 @@ class _PostJobPageState extends State<PostJobPage> {
           'Post a Trucking Job',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
+
         const SizedBox(height: 8),
+
         const Text(
           'Add job details. Admin approval is required before it appears live.',
           style: TextStyle(color: Colors.grey),
         ),
+
         const SizedBox(height: 20),
+
         inputField('Job title *', Icons.work, titleController),
         inputField('Company name *', Icons.business, companyController),
         inputField(
@@ -724,6 +902,7 @@ class _PostJobPageState extends State<PostJobPage> {
           Icons.location_city,
           cityController,
         ),
+
         dropdownField(
           label: 'State',
           icon: Icons.map,
@@ -735,6 +914,7 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
+
         dropdownField(
           label: 'Licence needed',
           icon: Icons.badge,
@@ -746,11 +926,13 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
+
         inputField(
           'Pay rate e.g. \$45/hr or \$550/day',
           Icons.payments,
           payController,
         ),
+
         dropdownField(
           label: 'Job type',
           icon: Icons.schedule,
@@ -762,36 +944,35 @@ class _PostJobPageState extends State<PostJobPage> {
             });
           },
         ),
+
         inputField('Contact phone number *', Icons.phone, contactController),
+
         SwitchListTile(
           title: const Text('Mark as urgent job'),
           subtitle: const Text('Urgent jobs will show a red badge'),
           value: isUrgent,
-          activeThumbColor: Colors.orange,
+          activeThumbColor: const Color(0xFFFF7A00),
           onChanged: (value) {
             setState(() {
               isUrgent = value;
             });
           },
         ),
+
         Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: TextField(
             controller: descriptionController,
             maxLines: 4,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Job description',
-              prefixIcon: const Icon(Icons.description),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
-              ),
+              prefixIcon: Icon(Icons.description),
             ),
           ),
         ),
+
         const SizedBox(height: 10),
+
         ElevatedButton(
           onPressed: submitJob,
           child: const Padding(
@@ -815,12 +996,6 @@ class _PostJobPageState extends State<PostJobPage> {
         decoration: InputDecoration(
           hintText: hint,
           prefixIcon: Icon(icon),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
         ),
       ),
     );
@@ -847,12 +1022,6 @@ class _PostJobPageState extends State<PostJobPage> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
         ),
       ),
     );
@@ -887,14 +1056,17 @@ class SavedJobsPage extends StatelessWidget {
           'Saved Jobs',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
+
         const SizedBox(height: 12),
+
         for (final job in savedJobs)
           Card(
             margin: const EdgeInsets.only(bottom: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
             child: ListTile(
+              leading: const Icon(
+                Icons.local_shipping,
+                color: Color(0xFFFF7A00),
+              ),
               title: Text(job.title),
               subtitle: Text('${job.company} • ${job.location}'),
               trailing: IconButton(
@@ -947,32 +1119,37 @@ class _AdminPinPageState extends State<AdminPinPage> {
           const Icon(
             Icons.admin_panel_settings,
             size: 70,
-            color: Colors.orange,
+            color: Color(0xFFFF7A00),
           ),
+
           const SizedBox(height: 20),
+
           const Text(
             'Admin Access',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
+
           const SizedBox(height: 10),
+
           const Text(
             'Enter admin PIN to approve, reject, or delete jobs.',
             textAlign: TextAlign.center,
           ),
+
           const SizedBox(height: 20),
+
           TextField(
             controller: pinController,
             obscureText: true,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Admin PIN',
-              prefixIcon: const Icon(Icons.lock),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
+              prefixIcon: Icon(Icons.lock),
             ),
           ),
+
           const SizedBox(height: 16),
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -1054,12 +1231,16 @@ class AdminPage extends StatelessWidget {
           'Admin Dashboard',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
+
         const SizedBox(height: 20),
+
         const Text(
           'Pending Jobs',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
+
         const SizedBox(height: 10),
+
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('jobs')
@@ -1078,11 +1259,13 @@ class AdminPage extends StatelessWidget {
               final data = doc.data() as Map<String, dynamic>;
               return Job.fromFirestore(doc.id, data);
             }).toList();
-pendingJobs.sort((a, b) {
-  final aDate = a.createdAt ?? DateTime(2000);
-  final bDate = b.createdAt ?? DateTime(2000);
-  return bDate.compareTo(aDate);
-});
+
+            pendingJobs.sort((a, b) {
+              final aDate = a.createdAt ?? DateTime(2000);
+              final bDate = b.createdAt ?? DateTime(2000);
+              return bDate.compareTo(aDate);
+            });
+
             if (pendingJobs.isEmpty) {
               return const Card(
                 child: Padding(
@@ -1097,9 +1280,6 @@ pendingJobs.sort((a, b) {
                 for (final job in pendingJobs)
                   Card(
                     margin: const EdgeInsets.only(bottom: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -1112,18 +1292,35 @@ pendingJobs.sort((a, b) {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+
                           const SizedBox(height: 6),
+
                           Text(job.company),
+
+                          const SizedBox(height: 6),
+
+                          Text(
+                            formatPostedDate(job.createdAt),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+
                           const SizedBox(height: 8),
+
                           Text(job.location),
-                          const SizedBox(height: 8),
                           Text('Licence: ${job.licence}'),
                           Text('Pay: ${job.pay}'),
                           Text('Type: ${job.type}'),
                           Text('Contact: ${job.contact}'),
+
                           const SizedBox(height: 10),
+
                           Text(job.description),
+
                           const SizedBox(height: 14),
+
                           Row(
                             children: [
                               Expanded(
@@ -1147,7 +1344,9 @@ pendingJobs.sort((a, b) {
                               ),
                             ],
                           ),
+
                           const SizedBox(height: 10),
+
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
@@ -1166,12 +1365,16 @@ pendingJobs.sort((a, b) {
             );
           },
         ),
+
         const SizedBox(height: 30),
+
         const Text(
           'Reported Jobs',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
+
         const SizedBox(height: 10),
+
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance.collection('reports').snapshots(),
           builder: (context, snapshot) {
@@ -1199,9 +1402,6 @@ pendingJobs.sort((a, b) {
                 for (final report in reports)
                   Card(
                     margin: const EdgeInsets.only(bottom: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Builder(
@@ -1219,14 +1419,18 @@ pendingJobs.sort((a, b) {
                                   color: Colors.red,
                                 ),
                               ),
+
                               const SizedBox(height: 8),
+
                               Text('Job: ${data['jobTitle'] ?? 'Unknown'}'),
                               Text('Company: ${data['company'] ?? 'Unknown'}'),
                               Text('Contact: ${data['contact'] ?? 'Unknown'}'),
                               Text(
                                 'Reason: ${data['reason'] ?? 'Reported by user'}',
                               ),
+
                               const SizedBox(height: 12),
+
                               Row(
                                 children: [
                                   Expanded(
@@ -1283,14 +1487,18 @@ class ProfilePage extends StatelessWidget {
           radius: 45,
           child: Icon(Icons.person, size: 50),
         ),
+
         SizedBox(height: 16),
+
         Center(
           child: Text(
             'Driver / Employer Profile',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
         ),
+
         SizedBox(height: 20),
+
         Card(
           child: ListTile(
             leading: Icon(Icons.person),
@@ -1298,6 +1506,7 @@ class ProfilePage extends StatelessWidget {
             subtitle: Text('Add your name later'),
           ),
         ),
+
         Card(
           child: ListTile(
             leading: Icon(Icons.badge),
@@ -1305,6 +1514,7 @@ class ProfilePage extends StatelessWidget {
             subtitle: Text('MR / HR / HC / MC'),
           ),
         ),
+
         Card(
           child: ListTile(
             leading: Icon(Icons.location_on),
