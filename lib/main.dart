@@ -369,7 +369,7 @@ class _JobsPageState extends State<JobsPage> {
       ),
     ),
   );
-}
+} 
 
   @override
   Widget build(BuildContext context) {
@@ -508,130 +508,262 @@ class _JobsPageState extends State<JobsPage> {
   }
 
   Widget jobCard(BuildContext context, Job job) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  height: 46,
-                  width: 46,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF7A00).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 12,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 54,
+                width: 54,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFFF7A00),
+                      Color(0xFFFFA726),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: const Icon(
-                    Icons.local_shipping,
-                    color: Color(0xFFFF7A00),
-                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    job.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: const Icon(
+                  Icons.local_shipping,
+                  color: Colors.white,
+                  size: 30,
                 ),
-                if (job.isUrgent)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'URGENT',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      job.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111827),
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      job.company,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formatPostedDate(job.createdAt),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (job.isUrgent)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
                   ),
-              ],
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.flash_on,
+                        size: 14,
+                        color: Colors.red,
+                      ),
+                      SizedBox(width: 3),
+                      Text(
+                        'URGENT',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(16),
             ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              job.company,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              formatPostedDate(job.createdAt),
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 13,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
+            child: Column(
               children: [
-                const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                const SizedBox(width: 4),
-                Expanded(child: Text(job.location)),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      size: 18,
+                      color: Color(0xFFFF7A00),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        job.location,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: infoPill(
+                        Icons.badge,
+                        job.licence,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: infoPill(
+                        Icons.work,
+                        job.type,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: infoPill(
+                        Icons.payments,
+                        job.pay,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: infoPill(
+                        Icons.verified,
+                        'Approved',
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
+          ),
 
-            const SizedBox(height: 8),
+          const SizedBox(height: 14),
 
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                Chip(
-                  avatar: const Icon(Icons.badge, size: 16),
-                  label: Text(job.licence),
-                ),
-                Chip(
-                  avatar: const Icon(Icons.payments, size: 16),
-                  label: Text(job.pay),
-                ),
-                Chip(
-                  avatar: const Icon(Icons.work, size: 16),
-                  label: Text(job.type),
-                ),
-                const Chip(
-                  avatar: Icon(Icons.verified, size: 16),
-                  label: Text('Approved'),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    widget.onSaveJob(job);
 
-            const SizedBox(height: 12),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  showJobDetails(context, job);
-                },
-                child: const Text('View Details'),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Job saved')),
+                    );
+                  },
+                  icon: const Icon(Icons.bookmark_border),
+                  label: const Text('Save'),
+                ),
               ),
-            ),
-          ],
-        ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    showJobDetails(context, job);
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('View Details'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
-
+    ),
+  );
+}
+Widget infoPill(IconData icon, String text) {
+  return Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 10,
+      vertical: 9,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(
+        color: Colors.grey.shade200,
+      ),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: const Color(0xFFFF7A00),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
   void showJobDetails(BuildContext context, Job job) {
     showModalBottomSheet(
       context: context,
