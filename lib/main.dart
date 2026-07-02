@@ -1430,6 +1430,7 @@ class JobsPage extends StatefulWidget {
 class _JobsPageState extends State<JobsPage> {
   String searchText = '';
   String selectedLicence = 'All';
+  String selectedLocation = 'All';
 
   Future<void> callEmployer(String phoneNumber) async {
     final Uri phoneUri = Uri(
@@ -1532,6 +1533,10 @@ class _JobsPageState extends State<JobsPage> {
           return !isJobExpired(job);
         }).toList();
 
+        final featuredJobs = activeJobs.where((job) {
+          return job.isUrgent;
+        }).take(6).toList();
+
         final filteredJobs = activeJobs.where((job) {
           final searchLower = searchText.toLowerCase();
 
@@ -1543,7 +1548,12 @@ class _JobsPageState extends State<JobsPage> {
           final matchesLicence =
               selectedLicence == 'All' || job.licence.contains(selectedLicence);
 
-          return matchesSearch && matchesLicence;
+          final matchesLocation = selectedLocation == 'All' ||
+              job.location.toLowerCase().contains(
+                    selectedLocation.toLowerCase(),
+                  );
+
+          return matchesSearch && matchesLicence && matchesLocation;
         }).toList();
 
         return ListView(
@@ -1552,6 +1562,190 @@ class _JobsPageState extends State<JobsPage> {
           addRepaintBoundaries: true,
           children: [
             heroBanner(),
+
+            if (featuredJobs.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Featured Jobs',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF1F2),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFFFECACA),
+                      ),
+                    ),
+                    child: Text(
+                      '${featuredJobs.length} live',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (int index = 0;
+                        index < featuredJobs.length;
+                        index++) ...[
+                      featuredJobCard(
+                        context,
+                        featuredJobs[index],
+                      ),
+                      if (index != featuredJobs.length - 1)
+                        const SizedBox(width: 12),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 22),
+            ],
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Browse by Licence',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedLicence = 'All';
+                      selectedLocation = 'All';
+                    });
+                  },
+                  child: const Text(
+                    'View all',
+                    style: TextStyle(
+                      color: Color(0xFFFF7A00),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                licenceQuickCard(
+                  licence: 'MR',
+                  count: licenceJobCount(activeJobs, 'MR'),
+                  icon: Icons.local_shipping_outlined,
+                ),
+                const SizedBox(width: 8),
+                licenceQuickCard(
+                  licence: 'HR',
+                  count: licenceJobCount(activeJobs, 'HR'),
+                  icon: Icons.fire_truck_outlined,
+                ),
+                const SizedBox(width: 8),
+                licenceQuickCard(
+                  licence: 'HC',
+                  count: licenceJobCount(activeJobs, 'HC'),
+                  icon: Icons.airport_shuttle_outlined,
+                ),
+                const SizedBox(width: 8),
+                licenceQuickCard(
+                  licence: 'MC',
+                  count: licenceJobCount(activeJobs, 'MC'),
+                  icon: Icons.route_outlined,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 22),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Popular Locations',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                if (selectedLocation != 'All')
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedLocation = 'All';
+                      });
+                    },
+                    child: const Text(
+                      'Clear',
+                      style: TextStyle(
+                        color: Color(0xFFFF7A00),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  locationQuickCard(
+                    city: 'Melbourne',
+                    count: locationJobCount(activeJobs, 'Melbourne'),
+                    icon: Icons.location_city,
+                  ),
+                  const SizedBox(width: 10),
+                  locationQuickCard(
+                    city: 'Sydney',
+                    count: locationJobCount(activeJobs, 'Sydney'),
+                    icon: Icons.apartment,
+                  ),
+                  const SizedBox(width: 10),
+                  locationQuickCard(
+                    city: 'Brisbane',
+                    count: locationJobCount(activeJobs, 'Brisbane'),
+                    icon: Icons.sunny,
+                  ),
+                  const SizedBox(width: 10),
+                  locationQuickCard(
+                    city: 'Perth',
+                    count: locationJobCount(activeJobs, 'Perth'),
+                    icon: Icons.explore,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 22),
 
             TextField(
               onChanged: (value) {
@@ -1616,6 +1810,431 @@ class _JobsPageState extends State<JobsPage> {
           ],
         );
       },
+    );
+  }
+
+
+  int licenceJobCount(List<Job> jobs, String licence) {
+    return jobs.where((job) => job.licence.contains(licence)).length;
+  }
+
+  Widget licenceQuickCard({
+    required String licence,
+    required int count,
+    required IconData icon,
+  }) {
+    final bool isSelected = selectedLicence == licence;
+
+    return Expanded(
+      child: PremiumTap(
+        onTap: () {
+          setState(() {
+            selectedLicence = licence;
+          });
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFFFF7A00)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFFFF7A00)
+                  : const Color(0xFFE5E7EB),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+                    ? const Color(0x44FF7A00)
+                    : Colors.black.withValues(alpha: 0.06),
+                blurRadius: isSelected ? 14 : 8,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                height: 42,
+                width: 42,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected
+                      ? Colors.white
+                      : const Color(0xFFFF7A00),
+                  size: 23,
+                ),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                licence,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : const Color(0xFF111827),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '$count jobs',
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.88)
+                      : const Color(0xFF64748B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  int locationJobCount(List<Job> jobs, String city) {
+    return jobs.where((job) {
+      return job.location.toLowerCase().contains(city.toLowerCase());
+    }).length;
+  }
+
+  Widget locationQuickCard({
+    required String city,
+    required int count,
+    required IconData icon,
+  }) {
+    final bool isSelected = selectedLocation == city;
+
+    return SizedBox(
+      width: 150,
+      child: PremiumTap(
+        onTap: () {
+          setState(() {
+            selectedLocation = isSelected ? 'All' : city;
+          });
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF111827)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF111827)
+                  : const Color(0xFFE5E7EB),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+                    ? const Color(0x33111827)
+                    : Colors.black.withValues(alpha: 0.06),
+                blurRadius: isSelected ? 14 : 8,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                height: 42,
+                width: 42,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFFFF7A00)
+                      : const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected
+                      ? Colors.white
+                      : const Color(0xFFFF7A00),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      city,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF111827),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$count jobs',
+                      style: TextStyle(
+                        color: isSelected
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF64748B),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget featuredJobCard(BuildContext context, Job job) {
+    Future<void> openFeaturedJob() async {
+      await trackJobClick(job.id, 'views');
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.push(
+        context,
+        premiumPageRoute(
+          JobDetailsPage(
+            job: job,
+            onSaveJob: () async {
+              final wasSaved = await widget.onSaveJob(job);
+
+              if (!mounted) {
+                return;
+              }
+
+              showPremiumMessage(
+                context,
+                wasSaved ? 'Job saved' : 'Already saved',
+                icon: wasSaved ? Icons.bookmark_added : Icons.bookmark,
+              );
+            },
+            onCallEmployer: () async {
+              await trackJobClick(job.id, 'callClicks');
+              await callEmployer(job.contact);
+            },
+            onWhatsappEmployer: () async {
+              await trackJobClick(job.id, 'whatsappClicks');
+              await whatsappEmployer(job);
+            },
+            onReportJob: () async {
+              final reason = await chooseReportReason(context);
+
+              if (reason != null) {
+                await reportJob(
+                  job,
+                  context,
+                  reason: reason,
+                );
+              }
+            },
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: 290,
+      child: PremiumTap(
+        onTap: openFeaturedJob,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF111827),
+                Color(0xFF1F2937),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0x33FF7A00),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22111827),
+                blurRadius: 14,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF7A00),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.flash_on,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'FEATURED',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    formatDaysLeft(job),
+                    style: const TextStyle(
+                      color: Color(0xFFCBD5E1),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                job.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  height: 1.15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                job.company,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFFE5E7EB),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    color: Color(0xFFFFA726),
+                    size: 17,
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      job.location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFFCBD5E1),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        job.licence,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF7A00),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        job.pay,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
