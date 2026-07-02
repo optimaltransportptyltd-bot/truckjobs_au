@@ -420,7 +420,7 @@ class AnimatedEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final delay = Duration(milliseconds: (index.clamp(0, 10)) * 45);
+    final delay = Duration(milliseconds: (index.clamp(0, 5)) * 30);
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -1047,7 +1047,7 @@ class _FrontHeroCarouselState extends State<FrontHeroCarousel> {
   void initState() {
     super.initState();
 
-    heroTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    heroTimer = Timer.periodic(const Duration(seconds: 6), (timer) {
       if (!mounted || heroImages.length < 2) {
         return;
       }
@@ -1056,6 +1056,15 @@ class _FrontHeroCarouselState extends State<FrontHeroCarousel> {
         currentHeroIndex = (currentHeroIndex + 1) % heroImages.length;
       });
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    for (final imagePath in heroImages) {
+      precacheImage(AssetImage(imagePath), context);
+    }
   }
 
   @override
@@ -1095,6 +1104,9 @@ class _FrontHeroCarouselState extends State<FrontHeroCarousel> {
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  cacheWidth: 1400,
+                  filterQuality: FilterQuality.medium,
+                  gaplessPlayback: true,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       key: ValueKey<String>('error_$currentHeroIndex'),
@@ -1466,11 +1478,15 @@ class _JobsPageState extends State<JobsPage> {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
+    if (!mounted) {
+      return;
+    }
+
     showPremiumMessage(
-  context,
-  'Job reported. Thank you.',
-  icon: Icons.report,
-);
+      context,
+      'Job reported. Thank you.',
+      icon: Icons.report,
+    );
   }
 
   Widget heroBanner() {
@@ -1532,6 +1548,8 @@ class _JobsPageState extends State<JobsPage> {
 
         return ListView(
           padding: const EdgeInsets.all(16),
+          addAutomaticKeepAlives: true,
+          addRepaintBoundaries: true,
           children: [
             heroBanner(),
 
@@ -1589,9 +1607,11 @@ class _JobsPageState extends State<JobsPage> {
               ),
 
             for (int index = 0; index < filteredJobs.length; index++)
-              AnimatedEntrance(
-                index: index,
-                child: jobCard(context, filteredJobs[index]),
+              RepaintBoundary(
+                child: AnimatedEntrance(
+                  index: index,
+                  child: jobCard(context, filteredJobs[index]),
+                ),
               ),
           ],
         );
